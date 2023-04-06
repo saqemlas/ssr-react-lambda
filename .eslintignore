@@ -1,0 +1,13 @@
+.github/
+.idea/
+.npm/
+.serverless/
+.husky/
+
+node_modules/
+build/
+public/
+
+.eslintrc.js 
+tsconfig.json
+package.json

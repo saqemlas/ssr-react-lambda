@@ -1,0 +1,106 @@
+service: ssr
+
+plugins:
+  - serverless-esbuild
+  - serverless-s3-cleaner
+  - serverless-iam-roles-per-function
+  - serverless-offline
+
+package:
+  individually: true
+  patterns:
+    - '!node_modules/**'
+    - '!.serverless/**'
+    - 'src/**'
+
+custom:
+  project: template
+  baseName: ${self:custom.project}-${self:service}-${self:provider.stage}
+
+  esbuild:
+    target: node16
+    packager: yarn
+    minify: true
+    sourcemap: true
+    watch: 
+      pattern: ./src/\*_/_.(js|ts|tsx)
+      ignore:
+        - 'node_modules'
+        - '.serverless'
+  
+  serverless-s3-cleaner:
+    buckets:
+      - ${cf:${self:custom.baseName}.ServerlessDeploymentBucketName, ''}
+
+  serverless-iam-roles-per-function:
+    defaultInherit: true
+  
+  serverless-offline:
+    host: localhost
+    httpPort: 3000
+  
+
+provider:
+  name: aws
+  region: ${opt:region, 'eu-west-1'}
+  stage: ${opt:stage, 'dev'}
+  stackName: ${self:custom.baseName}
+  deploymentBucket:
+    blockPublicAccess: true
+  runtime: nodejs16.x
+  memorySize: 128
+  timeout: 25
+  versionFunctions: false
+  logRetentionInDays: 7
+  logs:
+    httpApi: true
+  environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    NODE_OPTIONS: "--enable-source-maps"
+  httpApi:
+    disableDefaultEndpoint: false
+    shouldStartNameWithService: true
+    cors:
+      allowedOrigins: 
+        - '*'
+      allowedMethods:
+        - GET
+
+functions:
+  render:
+    name: ${self:custom.baseName}-render
+    handler: src/backend/index.handler
+    events:
+      - httpApi:
+          path: /
+          method: GET
+    role: RenderRole
+
+resources:
+  Resources:
+
+    # IAM
+
+    RenderRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:custom.baseName}-role
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: ${self:custom.baseName}-policy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource: !Sub arn:aws:logs:${self:provider.region}:${AWS::AccountId}:log-group:/aws/lambda/*:log-stream:*

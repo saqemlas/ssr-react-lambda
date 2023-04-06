@@ -1,0 +1,35 @@
+{
+  "name": "@aws-template/ssr-react-lambda",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "scripts": {
+    "clean": "rimraf node_modules .serverless .esbuild && yarn cache clean",
+    "invoke": "yarn run serverless offline",
+    "deploy": "yarn run serverless deploy",
+    "remove": "yarn run serverless remove"
+  },
+  "dependencies": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.84",
+    "@types/react": "18.0.28",
+    "@types/react-dom": "18.0.11",
+    "@types/node": "18.15.3",
+    "@typescript-eslint/eslint-plugin": "5.55.0",
+    "@typescript-eslint/parser": "5.55.0",
+    "esbuild": "0.17.12",
+    "eslint": "8.36.0",
+    "rimraf": "3.0.2",
+    "serverless": "3.28.1",
+    "serverless-esbuild": "1.41.0",
+    "serverless-s3-cleaner": "2.0.2",
+    "serverless-iam-roles-per-function": "3.2.0",
+    "serverless-offline": "12.0.4",
+    "typescript": "5.0.2"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  }
+}
